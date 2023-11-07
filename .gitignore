@@ -1,0 +1,4 @@
+/.idea/
+/src/test/resources/db.properties
+/src/main/resources/db.properties
+/src/main/java/jm/task/core/jdbc/dao/UserDaoHibernateImpl.java
