@@ -14,10 +14,7 @@ public class Main {
         // Создание таблицы пользователей
         userService.createUsersTable();
         // Добавление нового пользователя
-        // User user = new User("John", "Dow", (byte) 30);
         userService.saveUser("John", "Dow", (byte) 30);
-
-        // User user2 = new User("Jane", "Dowe", (byte) 25);
         userService.saveUser("Jane", "Dowe", (byte) 25);
 
         // Получение списка всех пользователей
