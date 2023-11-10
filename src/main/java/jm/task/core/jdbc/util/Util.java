@@ -17,11 +17,11 @@ public class Util {
 
     static {
         try {
-            Class<?> aClass = Class.forName("org.postgresql.Driver");
+            Class.forName("org.postgresql.Driver");
             System.out.println("PostgreSql драйвер зарегистрирован");
         } catch (ClassNotFoundException e) {
-            System.out.println("PostgreSql драйвер не найден");
-            throw new RuntimeException(e);
+            System.err.println("Ошибка: Драйвер org.postgresql.Driver не найден");
+            throw new ExceptionInInitializerError(e);
         }
     }
 
@@ -40,8 +40,11 @@ public class Util {
                 String password = properties.getProperty("password");
                 connection = DriverManager.getConnection(url, username, password);
             } catch (IOException e) {
-                throw new DatabaseException("Ошибка в чтении файла конфигурации", e);
+                System.err.println("Ошибка чтения файла db.resources: " + e.getMessage());
+                System.exit(-1);
             } catch (SQLException e) {
+                System.err.println("SQLException: " + e.getMessage()
+                        + "SQLState: " + e.getSQLState());
                 throw new DatabaseException("Ощибка соединения с БД", e);
             }
 
@@ -54,7 +57,8 @@ public class Util {
         try (InputStream fileInputStream = Util.class.getClassLoader().getResourceAsStream("db.properties")) {
             properties.load(fileInputStream);
         } catch (IOException e) {
-            throw new DatabaseException("Ошибка в чтении файла конфигурации", e);
+            System.err.println("Ошибка чтения файла db.resources: " + e.getMessage());
+            System.exit(-1);
         }
         if (sessionFactory == null) {
             sessionFactory = new Configuration()
@@ -77,6 +81,8 @@ public class Util {
         try {
             connection.close();
         } catch (SQLException e) {
+            System.err.println("SQLException: " + e.getMessage()
+                    + "SQLState: " + e.getSQLState());
             throw new DatabaseException("Соединение с БД закрылось с ошибкой", e);
         }
     }

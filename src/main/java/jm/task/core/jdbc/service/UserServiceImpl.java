@@ -24,6 +24,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void close(){
         userDao.close();
+        System.out.println("Соединение с БД закрыто");
     }
 
     @Override
