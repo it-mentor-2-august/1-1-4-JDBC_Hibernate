@@ -22,5 +22,7 @@ public class Main {
          userService.cleanUsersTable();
         // Удаление таблицы пользователей
          userService.dropUsersTable();
+
+         userService.close();
     }
 }

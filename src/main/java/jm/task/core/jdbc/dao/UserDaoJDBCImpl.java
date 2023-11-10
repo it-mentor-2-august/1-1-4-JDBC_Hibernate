@@ -1,16 +1,16 @@
 package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.model.User;
+import jm.task.core.jdbc.util.Util;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-    private final Connection connection;
 
-    public UserDaoJDBCImpl(Connection connection) {
-        this.connection = connection;
+    private final Connection connection = Util.getConnection();
+    public UserDaoJDBCImpl() {
     }
 
     public void createUsersTable() {
@@ -21,9 +21,11 @@ public class UserDaoJDBCImpl implements UserDao {
                 "age SMALLINT NOT NULL )";
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(sql);
-            System.out.println("Created table is success");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Таблица Users успешно создана");
+        } catch (SQLException ex) {
+            System.err.println("SQLException: " + ex.getMessage()
+                    + "SQLState: " + ex.getSQLState());
+            ex.printStackTrace();
         }
     }
 
@@ -31,9 +33,11 @@ public class UserDaoJDBCImpl implements UserDao {
         String sql = "DROP TABLE IF EXISTS Users;";
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(sql);
-            System.out.println("Drop table is success");
+            System.out.println("Таблица Users успешно удалена");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("SQLException: " + e.getMessage()
+                    + "SQLState: " + e.getSQLState());
+            e.printStackTrace();
         }
     }
 
@@ -48,7 +52,9 @@ public class UserDaoJDBCImpl implements UserDao {
             statement.executeUpdate();
             System.out.println("Пользователь с именем " + name + " добавлен в БД");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("SQLException: " + e.getMessage()
+                    + "SQLState: " + e.getSQLState());
+            e.printStackTrace();
         }
     }
 
@@ -59,16 +65,17 @@ public class UserDaoJDBCImpl implements UserDao {
             statement.setLong(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("SQLException: " + e.getMessage()
+                    + "SQLState: " + e.getSQLState());
+            e.printStackTrace();
         }
     }
 
     public List<User> getAllUsers() {
         String sql = "SELECT * FROM Users;";
-
+        List<User> users = new ArrayList<>();
         try(Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(sql);
-            List<User> users = new ArrayList<>();
             while (resultSet.next()) {
                 users.add(new User(
                         resultSet.getString("name"),
@@ -78,8 +85,11 @@ public class UserDaoJDBCImpl implements UserDao {
             }
             return users;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("SQLException: " + e.getMessage()
+                    + "SQLState: " + e.getSQLState());
+            e.printStackTrace();
         }
+        return users;
     }
 
     public void cleanUsersTable() {
@@ -87,9 +97,16 @@ public class UserDaoJDBCImpl implements UserDao {
 
         try(Statement statement = connection.createStatement()) {
             statement.executeUpdate(sql);
-            System.out.println("Таблица users очищенна!");
+            System.out.println("Таблица Users очищенна!");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("SQLException: " + e.getMessage()
+                    + "SQLState: " + e.getSQLState());
+            e.printStackTrace();
         }
+    }
+
+    @Override
+    public void close() {
+       Util.closeConnection();
     }
 }

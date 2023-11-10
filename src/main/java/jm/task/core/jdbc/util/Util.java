@@ -12,14 +12,12 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 public class Util {
-    private static final String DB_URL = "jdbc:postgresql://localhost:5432/example";
-    private static final String JDBC_DRIVER = "org.postgresql.Driver";
     private static Connection connection = null;
     private static SessionFactory sessionFactory;
 
     static {
         try {
-            Class.forName(JDBC_DRIVER);
+            Class<?> aClass = Class.forName("org.postgresql.Driver");
             System.out.println("PostgreSql драйвер зарегистрирован");
         } catch (ClassNotFoundException e) {
             System.out.println("PostgreSql драйвер не найден");
@@ -28,7 +26,7 @@ public class Util {
     }
 
 
-    public static Connection getConnection() throws SQLException {
+    public static Connection getConnection() {
         if (connection != null) {
             return connection;
         } else {
@@ -42,15 +40,13 @@ public class Util {
                 String password = properties.getProperty("password");
                 connection = DriverManager.getConnection(url, username, password);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new DatabaseException("Ошибка в чтении файла конфигурации", e);
+            } catch (SQLException e) {
+                throw new DatabaseException("Ощибка соединения с БД", e);
             }
 
         }
         return connection;
-    }
-
-    public static Connection getConnection(String username, String password) throws SQLException {
-       return DriverManager.getConnection(DB_URL, username, password);
     }
 
     public static SessionFactory getSessionFactory() {
@@ -58,7 +54,7 @@ public class Util {
         try (InputStream fileInputStream = Util.class.getClassLoader().getResourceAsStream("db.properties")) {
             properties.load(fileInputStream);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new DatabaseException("Ошибка в чтении файла конфигурации", e);
         }
         if (sessionFactory == null) {
             sessionFactory = new Configuration()
@@ -72,5 +68,22 @@ public class Util {
                     .buildSessionFactory();
         }
         return sessionFactory;
+    }
+    public static void closeSessionFactory() {
+        sessionFactory.close();
+    }
+
+    public static void closeConnection() {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            throw new DatabaseException("Соединение с БД закрылось с ошибкой", e);
+        }
+    }
+}
+
+class DatabaseException extends RuntimeException {
+    public DatabaseException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

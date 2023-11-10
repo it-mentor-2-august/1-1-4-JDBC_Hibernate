@@ -22,6 +22,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void close(){
+        userDao.close();
+    }
+
+    @Override
     public void createUsersTable() {
         userDao.createUsersTable();
     }
