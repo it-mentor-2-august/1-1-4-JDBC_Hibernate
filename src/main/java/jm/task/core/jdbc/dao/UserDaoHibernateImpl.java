@@ -1,9 +1,7 @@
 package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.model.User;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
+import org.hibernate.*;
 
 import java.util.List;
 
@@ -28,7 +26,6 @@ public class UserDaoHibernateImpl implements UserDao {
             session.createSQLQuery(sql).executeUpdate();
             session.getTransaction().commit();
         }
-
     }
 
     @Override
@@ -47,7 +44,6 @@ public class UserDaoHibernateImpl implements UserDao {
             session.beginTransaction();
             User user = new User(name, lastName, age);
             session.save(user);
-            // session.persist(user);
             session.getTransaction().commit();
         }
     }
@@ -58,11 +54,9 @@ public class UserDaoHibernateImpl implements UserDao {
         try(Session session = sessionFactory.openSession()){
             transaction = session.beginTransaction();
             User user = session.get(User.class, id);
-            //  Create Exception if user not find
             if (user != null){
                 session.delete(user);
             }
-            // session.remove(user);
             transaction.commit();
         }
         catch(Exception e){
@@ -77,7 +71,7 @@ public class UserDaoHibernateImpl implements UserDao {
     public List<User> getAllUsers() {
         List<User> userList = null;
         try(Session session = sessionFactory.openSession()) {
-            userList = (List<User>) session.createQuery("FROM User").list();
+            userList = session.createQuery("FROM User").list();
         }
         return userList;
     }
