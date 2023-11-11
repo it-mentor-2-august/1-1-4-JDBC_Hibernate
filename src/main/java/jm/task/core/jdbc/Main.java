@@ -6,8 +6,10 @@ import jm.task.core.jdbc.service.UserServiceImpl;
 
 import java.util.List;
 
+import static java.lang.System.*;
+
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         try(UserService userService = new UserServiceImpl()){
             // Создание таблицы пользователей
             userService.createUsersTable();
@@ -17,14 +19,11 @@ public class Main {
 
             // Получение списка всех пользователей
             List<User> userList = userService.getAllUsers();
-            userList.forEach(System.out::println);
+            if (userList != null && !userList.isEmpty()) userList.forEach(out::println);
             // Очистка таблицы пользователей users
             userService.cleanUsersTable();
             // Удаление таблицы пользователей
             userService.dropUsersTable();
-        } catch (Exception e) {
-            System.err.println("Ошибка: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 }
