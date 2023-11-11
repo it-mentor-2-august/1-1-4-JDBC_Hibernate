@@ -8,21 +8,23 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        UserService userService = new UserServiceImpl();
-        // Создание таблицы пользователей
-        userService.createUsersTable();
-        // Добавление нового пользователя
-        userService.saveUser("John", "Dow", (byte) 30);
-        userService.saveUser("Jane", "Dowe", (byte) 25);
+        try(UserService userService = new UserServiceImpl()){
+            // Создание таблицы пользователей
+            userService.createUsersTable();
+            // Добавление нового пользователя
+            userService.saveUser("John", "Dow", (byte) 30);
+            userService.saveUser("Jane", "Dowe", (byte) 25);
 
-        // Получение списка всех пользователей
-        List<User> userList = userService.getAllUsers();
-        userList.forEach(System.out::println);
-        // Очистка таблицы пользователей users
-         userService.cleanUsersTable();
-        // Удаление таблицы пользователей
-         userService.dropUsersTable();
-         // Закрытие соединение с БД
-         userService.close();
+            // Получение списка всех пользователей
+            List<User> userList = userService.getAllUsers();
+            userList.forEach(System.out::println);
+            // Очистка таблицы пользователей users
+            userService.cleanUsersTable();
+            // Удаление таблицы пользователей
+            userService.dropUsersTable();
+        } catch (Exception e) {
+            System.err.println("Ошибка: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
