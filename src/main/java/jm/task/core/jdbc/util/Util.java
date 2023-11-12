@@ -17,6 +17,7 @@ import static java.lang.System.err;
 public class Util {
     private static Connection connection = null;
     private static SessionFactory sessionFactory;
+    private static final Properties properties;
 
     static {
         try {
@@ -24,46 +25,38 @@ public class Util {
             out.println("PostgreSql драйвер зарегистрирован");
         } catch (ClassNotFoundException e) {
             err.println("Ошибка: Драйвер org.postgresql.Driver не найден");
+
+        }
+    }
+
+    static {
+        properties = new Properties();
+        try(InputStream fileInputStream = Util.class.getClassLoader().getResourceAsStream("db.properties")) {
+            properties.load(fileInputStream);
+        } catch (IOException e) {
+            err.println("Ошибка чтения файла db.resources: " + e.getMessage());
             throw new ExceptionInInitializerError(e);
         }
     }
 
 
     public static Connection getConnection() {
-        if (connection != null) {
-            return connection;
-        } else {
-            try {
-                Properties properties = new Properties();
-                try (InputStream fileInputStream = Util.class.getClassLoader().getResourceAsStream("db.properties")) {
-                    properties.load(fileInputStream);
-                }
-                String url = properties.getProperty("url");
-                String username = properties.getProperty("user");
-                String password = properties.getProperty("password");
-                connection = DriverManager.getConnection(url, username, password);
-            } catch (IOException e) {
-                err.println("Ошибка чтения файла db.resources: " + e.getMessage());
-                exit(-1);
-            } catch (SQLException e) {
-                err.println("SQLException: " + e.getMessage()
-                        + "SQLState: " + e.getSQLState());
-                throw new DatabaseException("Ощибка соединения с БД", e);
-            }
-
+        try {
+            String url = properties.getProperty("url");
+            String username = properties.getProperty("user");
+            String password = properties.getProperty("password");
+            connection = DriverManager.getConnection(url, username, password);
+        } catch (SQLException e) {
+            err.println("SQLException: " + e.getMessage()
+                    + "SQLState: " + e.getSQLState());
+            throw new DatabaseException("Ощибка соединения с БД", e);
         }
+
         return connection;
     }
 
     public static SessionFactory getSessionFactory() {
-        Properties properties = new Properties();
-        try (InputStream fileInputStream = Util.class.getClassLoader().getResourceAsStream("db.properties")) {
-            properties.load(fileInputStream);
-        } catch (IOException e) {
-            err.println("Ошибка чтения файла db.resources: " + e.getMessage());
-            exit(-1);
-        }
-        if (sessionFactory == null) {
+        if (sessionFactory == null){
             sessionFactory = new Configuration()
                     .addAnnotatedClass(User.class)
                     .setProperty("hibernate.connection.driver_class", properties.getProperty("driver"))
@@ -76,18 +69,9 @@ public class Util {
         }
         return sessionFactory;
     }
+
     public static void closeSessionFactory() {
         sessionFactory.close();
-    }
-
-    public static void closeConnection() {
-        try {
-            connection.close();
-        } catch (SQLException e) {
-            err.println("SQLException: " + e.getMessage()
-                    + "SQLState: " + e.getSQLState());
-            throw new DatabaseException("Соединение с БД закрылось с ошибкой", e);
-        }
     }
 }
 
