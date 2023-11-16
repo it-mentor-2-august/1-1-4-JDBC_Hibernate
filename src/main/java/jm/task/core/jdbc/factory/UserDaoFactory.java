@@ -13,11 +13,7 @@ import java.util.Properties;
 public class UserDaoFactory {
     public UserDao getByProperty() {
         if (getProperty().equals("jdbc")) {
-            try {
-                return new UserDaoJDBCImpl(Util.getConnection());
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            return new UserDaoJDBCImpl();
         } else if(getProperty().equals("jpa")){
             return new UserDaoHibernateImpl(Util.getSessionFactory());
         }
@@ -31,8 +27,8 @@ public class UserDaoFactory {
         try (InputStream fileInputStream = Util.class.getClassLoader().getResourceAsStream("db.properties")) {
             properties.load(fileInputStream);
         } catch (IOException e) {
-            System.out.println("Ошибка доступа к файлу db.properties");
-            throw new RuntimeException(e);
+            System.err.println("Ошибка доступа к файлу db.properties");
+            e.printStackTrace();
         }
         return properties.getProperty("daotype");
     }

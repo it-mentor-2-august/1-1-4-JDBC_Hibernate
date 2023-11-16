@@ -1,16 +1,24 @@
 package jm.task.core.jdbc.dao;
 
 import jm.task.core.jdbc.model.User;
+import jm.task.core.jdbc.util.Util;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-    private final Connection connection;
 
-    public UserDaoJDBCImpl(Connection connection) {
-        this.connection = connection;
+    public UserDaoJDBCImpl() {
+        /* TODO document why this constructor is empty */
+    }
+
+    private Connection getConnection() throws SQLException {
+        Connection connection =  Util.getConnection();
+        if (connection == null) {
+            throw new SQLException("Не удалось установить соединение с БД");
+        }
+        return connection;
     }
 
     public void createUsersTable() {
@@ -19,28 +27,34 @@ public class UserDaoJDBCImpl implements UserDao {
                 "name VARCHAR(255) NOT NULL, " +
                 "lastName VARCHAR(255) NOT NULL, " +
                 "age SMALLINT NOT NULL )";
-        try (Statement statement = connection.createStatement()) {
+        try (Connection connection = getConnection();
+             Statement statement = connection.createStatement()) {
             statement.executeUpdate(sql);
-            System.out.println("Created table is success");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Таблица Users успешно создана");
+        } catch (SQLException ex) {
+            System.err.println("SQLException: " + ex.getMessage()
+                    + "SQLState: " + ex.getSQLState());
+            ex.printStackTrace();
         }
     }
 
     public void dropUsersTable() {
         String sql = "DROP TABLE IF EXISTS Users;";
-        try (Statement statement = connection.createStatement()) {
+        try (Connection connection = getConnection();
+             Statement statement = connection.createStatement()) {
             statement.executeUpdate(sql);
-            System.out.println("Drop table is success");
+            System.out.println("Таблица Users успешно удалена");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("SQLException: " + e.getMessage()
+                    + "SQLState: " + e.getSQLState());
+            e.printStackTrace();
         }
     }
 
     public void saveUser(String name, String lastName, byte age) {
         String sql = "INSERT INTO Users (name, lastName, age) VALUES (?, ?, ?);";
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, name);
             statement.setString(2, lastName);
             statement.setByte(3, age);
@@ -48,27 +62,33 @@ public class UserDaoJDBCImpl implements UserDao {
             statement.executeUpdate();
             System.out.println("Пользователь с именем " + name + " добавлен в БД");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("SQLException: " + e.getMessage()
+                    + "SQLState: " + e.getSQLState());
+            e.printStackTrace();
         }
     }
 
     public void removeUserById(long id) {
         String sql = "DELETE FROM Users WHERE id = ?;";
 
-        try(PreparedStatement statement = connection.prepareStatement(sql)) {
+        try(Connection connection = getConnection();
+            PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("SQLException: " + e.getMessage()
+                    + "SQLState: " + e.getSQLState());
+            e.printStackTrace();
         }
     }
 
     public List<User> getAllUsers() {
         String sql = "SELECT * FROM Users;";
+        List<User> users = new ArrayList<>();
 
-        try(Statement statement = connection.createStatement()) {
+        try(Connection connection = getConnection();
+            Statement statement = connection.createStatement()) {
             ResultSet resultSet = statement.executeQuery(sql);
-            List<User> users = new ArrayList<>();
             while (resultSet.next()) {
                 users.add(new User(
                         resultSet.getString("name"),
@@ -76,20 +96,29 @@ public class UserDaoJDBCImpl implements UserDao {
                         resultSet.getByte("age")
                 ));
             }
-            return users;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("SQLException: " + e.getMessage()
+                    + "SQLState: " + e.getSQLState());
+            e.printStackTrace();
         }
+        return users;
     }
 
     public void cleanUsersTable() {
         String sql = "TRUNCATE TABLE Users;";
-
-        try(Statement statement = connection.createStatement()) {
+        try(Connection connection = getConnection();
+            Statement statement = connection.createStatement()) {
             statement.executeUpdate(sql);
-            System.out.println("Таблица users очищенна!");
+            System.out.println("Таблица Users очищенна!");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("SQLException: " + e.getMessage()
+                    + "SQLState: " + e.getSQLState());
+            e.printStackTrace();
         }
+    }
+
+    @Override
+    public void close() {
+
     }
 }
